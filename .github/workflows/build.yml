@@ -24,3 +24,17 @@ jobs:
       - name: Build go-chat
         run: |
           make build 
+
+ - name: Package binary
+        run: |
+          $archiveName = "go-chat-windows-amd64.zip"
+          Compress-Archive -Path ./bin/*.exe -DestinationPath $archiveName
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: go-chat-windows-amd64.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -16,18 +16,6 @@ jobs:
           go-version: '1.24'  # 指定 Go 版本（根据项目需求调整）
           cache: true  # 启用 Go 模块缓存加速构建
 
-      - name: Install Redis 6
-        run: |
-          # 确保 Chocolatey 是最新版本
-          choco upgrade chocolatey -y
-          
-          # 安装 Redis 6.x 版本（指定版本号 6.2.6，可根据需要调整）
-          choco install redis-64 --version=6.2.6 -y --no-progress
-          
-          # 安装为系统服务并启动
-          redis-server --service-install
-          redis-server --service-start
-
       - name: Install dependencies
         run: |
           go mod tidy

@@ -29,8 +29,6 @@ jobs:
         run: |
           $archiveName = "go-chat-${{ github.ref_name }}-windows-bin.zip"
           Compress-Archive -Path ./bin/* -DestinationPath $archiveName -Force
-          Write-Host "ZIP 包内容："
-          Get-ChildItem ./bin -Recurse | Select-Object -ExpandProperty FullName
         shell: pwsh
 
       - name: Create Release
@@ -39,9 +37,15 @@ jobs:
           draft: false
           prerelease: false
           name: go-chat-windows-amd64
-          tag_name: go-chat_v1.0.0
+          tag_name: go-chat
           body: |
                 环境：Golang 1.23+、mysql 8.0+、Redis 5.0+、Minio(可选)
+                ### 打开终端，分别运行下面命令：
+                - $ go run ./cmd/lumenim http      # 本地启动 http 服务
+                - $ go run ./cmd/lumenim comet    # 本地启动 websocket 服务
+                - $ go run ./cmd/lumenim queue     # 启动异步队列
+                - $ go run ./cmd/lumenim crontab      # 启动定时任务
+                - $ go run ./cmd/lumenim temp test    # 自定义脚本
           files: |
             go-chat-${{ github.ref_name }}-windows-bin.zip
         env:

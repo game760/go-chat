@@ -14,7 +14,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.25'  # 指定 Go 版本（根据项目需求调整）
+          go-version: '1.23'  # 指定 Go 版本（根据项目需求调整）
           cache: true  # 启用 Go 模块缓存加速构建
 
       - name: Install dependencies

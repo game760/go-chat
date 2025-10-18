@@ -36,6 +36,8 @@ jobs:
           files: go-chat-windows-amd64.zip
           draft: false
           prerelease: false
+          name: go-chat-windows-amd64
+          tag_name: go-chat_v1.0.0
           body: |
                 环境：Golang 1.23+、mysql 8.0+、Redis 5.0+、Minio(可选)
         env:

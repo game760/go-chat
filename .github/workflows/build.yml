@@ -27,7 +27,7 @@ jobs:
 
       - name: Package bin folder
         run: |
-          $archiveName = "go-chat-${{ github.ref_name }}-windows-bin.zip"
+          $archiveName = "go-chat-${{ github.ref_name }}.zip"
           Compress-Archive -Path ./bin/* -DestinationPath $archiveName -Force
         shell: pwsh
 
@@ -47,6 +47,6 @@ jobs:
                 - $ go run ./cmd/lumenim crontab      # 启动定时任务
                 - $ go run ./cmd/lumenim temp test    # 自定义脚本
           files: |
-            go-chat-${{ github.ref_name }}-windows-bin.zip
+            go-chat-${{ github.ref_name }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.BUILD_CHAT }}

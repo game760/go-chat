@@ -28,17 +28,17 @@ jobs:
       - name: Package binary
         run: |
           $archiveName = "go-chat-windows-amd64.zip"
-          Compress-Archive -Path ./bin/*.exe -DestinationPath $archiveName
+          Compress-Archive -Path ./bin/*.* -DestinationPath $archiveName
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: go-chat-windows-amd64.zip
           draft: false
           prerelease: false
           name: go-chat-windows-amd64
           tag_name: go-chat_v1.0.0
           body: |
                 环境：Golang 1.23+、mysql 8.0+、Redis 5.0+、Minio(可选)
+          files: /*.*
         env:
           GITHUB_TOKEN: ${{ secrets.BUILD_CHAT }}

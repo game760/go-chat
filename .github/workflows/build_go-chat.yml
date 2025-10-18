@@ -1,7 +1,9 @@
-name: Build go-chat on Windows
+name: build_go-chat
 
 on:
-  push:
+  workflow_dispatch:
+  schedule:
+    - cron: 0 18 * * *
 
 jobs:
   build:

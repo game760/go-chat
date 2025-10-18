@@ -27,7 +27,8 @@ jobs:
 
       - name: Package bin folder
         run: |
-          $archiveName = "go-chat-${{ github.ref_name }}.zip"
+          cp config.example.yaml ./bin/config.yaml
+          $archiveName = "go-chat.zip"
           Compress-Archive -Path ./bin/* -DestinationPath $archiveName -Force
         shell: pwsh
 
@@ -36,17 +37,22 @@ jobs:
         with:
           draft: false
           prerelease: false
-          name: go-chat-windows-amd64
+          name: go-chat
           tag_name: go-chat
           body: |
-                环境：Golang 1.23+、mysql 8.0+、Redis 5.0+、Minio(可选)
-                ### 打开终端，分别运行下面命令：
-                - $ go run ./cmd/lumenim http      # 本地启动 http 服务
-                - $ go run ./cmd/lumenim comet    # 本地启动 websocket 服务
-                - $ go run ./cmd/lumenim queue     # 启动异步队列
-                - $ go run ./cmd/lumenim crontab      # 启动定时任务
-                - $ go run ./cmd/lumenim temp test    # 自定义脚本
+              - 所需环境：
+                 - Golang 1.23+
+                 - mysql 8.0+
+                 - Redis 5.0+
+                 - Minio(可选)
+              - 使用方法：
+                 设置config.yaml相关参数，然后打开终端，分别运行下面命令：
+                 - $ go run ./cmd/lumenim http      # 本地启动 http 服务
+                 - $ go run ./cmd/lumenim comet    # 本地启动 websocket 服务
+                 - $ go run ./cmd/lumenim queue     # 启动异步队列
+                 - $ go run ./cmd/lumenim crontab      # 启动定时任务
+                 - $ go run ./cmd/lumenim temp test    # 自定义脚本
           files: |
-            go-chat-${{ github.ref_name }}.zip
+            go-chat.zip
         env:
           GITHUB_TOKEN: ${{ secrets.BUILD_CHAT }}

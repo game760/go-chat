@@ -25,7 +25,9 @@ jobs:
 
       - name: Build go-chat
         run: |
-          GOOS=windows GOARCH=amd64 make build
+            $env:GOOS = "windows"
+            $env:GOARCH = "amd64"
+            make build
 
       - name: Package bin folder
         run: |

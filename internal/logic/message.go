@@ -3,9 +3,9 @@ package logic
 import (
 	"context"
 
+	"github.com/gzydong/go-chat/internal/entity"
+	"github.com/gzydong/go-chat/internal/pkg/jsonutil"
 	"github.com/redis/go-redis/v9"
-	"go-chat/internal/entity"
-	"go-chat/internal/pkg/jsonutil"
 )
 
 type PushMessage struct {
@@ -13,8 +13,7 @@ type PushMessage struct {
 }
 
 func (m *PushMessage) Push(ctx context.Context, topic string, body *entity.SubscribeMessage) error {
-	m.Redis.Publish(ctx, topic, jsonutil.Encode(body))
-	return nil
+	return m.Redis.Publish(ctx, topic, jsonutil.Encode(body)).Err()
 }
 
 func (m *PushMessage) MultiPush(ctx context.Context, topic string, items []*entity.SubscribeMessage) error {

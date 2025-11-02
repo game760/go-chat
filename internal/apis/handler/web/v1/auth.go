@@ -5,23 +5,23 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/gzydong/go-chat/internal/pkg/core/errorx"
+	"github.com/gzydong/go-chat/internal/pkg/encrypt/aesutil"
+	"github.com/gzydong/go-chat/internal/pkg/encrypt/rsautil"
+	"github.com/gzydong/go-chat/internal/pkg/jwtutil"
+	"github.com/gzydong/go-chat/internal/pkg/utils"
+	"github.com/gzydong/go-chat/internal/repository/model"
 	"github.com/redis/go-redis/v9"
-	"go-chat/internal/pkg/core/errorx"
-	"go-chat/internal/pkg/encrypt/aesutil"
-	"go-chat/internal/pkg/encrypt/rsautil"
-	"go-chat/internal/pkg/jwtutil"
-	"go-chat/internal/pkg/utils"
-	"go-chat/internal/repository/model"
 
-	"go-chat/api/pb/queue/v1"
-	"go-chat/api/pb/web/v1"
-	"go-chat/config"
-	"go-chat/internal/entity"
-	"go-chat/internal/pkg/jsonutil"
-	"go-chat/internal/pkg/logger"
-	"go-chat/internal/repository/cache"
-	"go-chat/internal/repository/repo"
-	"go-chat/internal/service"
+	"github.com/gzydong/go-chat/api/pb/queue/v1"
+	"github.com/gzydong/go-chat/api/pb/web/v1"
+	"github.com/gzydong/go-chat/config"
+	"github.com/gzydong/go-chat/internal/entity"
+	"github.com/gzydong/go-chat/internal/pkg/jsonutil"
+	"github.com/gzydong/go-chat/internal/pkg/logger"
+	"github.com/gzydong/go-chat/internal/repository/cache"
+	"github.com/gzydong/go-chat/internal/repository/repo"
+	"github.com/gzydong/go-chat/internal/service"
 )
 
 var _ web.IAuthHandler = (*Auth)(nil)
@@ -42,7 +42,7 @@ type Auth struct {
 	AesUtil             aesutil.IAesUtil
 }
 
-func (a Auth) Login(ctx context.Context, in *web.AuthLoginRequest) (*web.AuthLoginResponse, error) {
+func (a *Auth) Login(ctx context.Context, in *web.AuthLoginRequest) (*web.AuthLoginResponse, error) {
 	password, err := a.Rsa.Decrypt(in.Password)
 	if err != nil {
 		return nil, err
@@ -89,7 +89,7 @@ func (a Auth) Login(ctx context.Context, in *web.AuthLoginRequest) (*web.AuthLog
 	}, nil
 }
 
-func (a Auth) Register(ctx context.Context, in *web.AuthRegisterRequest) (*web.AuthRegisterResponse, error) {
+func (a *Auth) Register(ctx context.Context, in *web.AuthRegisterRequest) (*web.AuthRegisterResponse, error) {
 	if !utils.IsMobile(in.Mobile) {
 		return nil, errorx.New(400, "手机号格式不对")
 	}
@@ -129,7 +129,7 @@ func (a Auth) Register(ctx context.Context, in *web.AuthRegisterRequest) (*web.A
 	}, nil
 }
 
-func (a Auth) Forget(ctx context.Context, in *web.AuthForgetRequest) (*web.AuthForgetResponse, error) {
+func (a *Auth) Forget(ctx context.Context, in *web.AuthForgetRequest) (*web.AuthForgetResponse, error) {
 	if !utils.IsMobile(in.Mobile) {
 		return nil, errorx.New(400, "手机号格式不对")
 	}
@@ -157,7 +157,7 @@ func (a Auth) Forget(ctx context.Context, in *web.AuthForgetRequest) (*web.AuthF
 	return &web.AuthForgetResponse{}, nil
 }
 
-func (a Auth) Oauth(ctx context.Context, in *web.AuthOauthRequest) (*web.AuthOauthResponse, error) {
+func (a *Auth) Oauth(ctx context.Context, in *web.AuthOauthRequest) (*web.AuthOauthResponse, error) {
 	uri, err := a.OauthService.GetAuthURL(ctx, model.OAuthType(in.OauthType))
 	if err != nil {
 		return nil, err
@@ -166,7 +166,7 @@ func (a Auth) Oauth(ctx context.Context, in *web.AuthOauthRequest) (*web.AuthOau
 	return &web.AuthOauthResponse{Uri: uri}, nil
 }
 
-func (a Auth) OauthBind(ctx context.Context, in *web.AuthOAuthBindRequest) (*web.AuthOAuthBindResponse, error) {
+func (a *Auth) OauthBind(ctx context.Context, in *web.AuthOAuthBindRequest) (*web.AuthOAuthBindResponse, error) {
 	decrypt, err := a.AesUtil.Decrypt(in.BindToken)
 	if err != nil {
 		return nil, err
@@ -214,7 +214,7 @@ func (a Auth) OauthBind(ctx context.Context, in *web.AuthOAuthBindRequest) (*web
 	}, nil
 }
 
-func (a Auth) OauthLogin(ctx context.Context, in *web.AuthOauthLoginRequest) (*web.AuthOauthLoginResponse, error) {
+func (a *Auth) OauthLogin(ctx context.Context, in *web.AuthOauthLoginRequest) (*web.AuthOauthLoginResponse, error) {
 
 	oAuthInfo, err := a.OauthService.HandleCallback(ctx, model.OAuthType(in.OauthType), in.Code, in.State)
 	if err != nil {
@@ -251,15 +251,15 @@ func (a Auth) OauthLogin(ctx context.Context, in *web.AuthOauthLoginRequest) (*w
 }
 
 // 生成 JWT Token
-func (c *Auth) authorize(uid int) (*web.Authorize, error) {
+func (a *Auth) authorize(uid int) (*web.Authorize, error) {
 	token, err := jwtutil.NewTokenWithClaims(
-		[]byte(c.Config.Jwt.Secret), entity.WebClaims{
+		[]byte(a.Config.Jwt.Secret), entity.WebClaims{
 			UserId: int32(uid),
 		},
 		func(c *jwt.RegisteredClaims) {
 			c.Issuer = entity.JwtIssuerWeb
 		},
-		jwtutil.WithTokenExpiresAt(time.Duration(c.Config.Jwt.ExpiresTime)*time.Second),
+		jwtutil.WithTokenExpiresAt(time.Duration(a.Config.Jwt.ExpiresTime)*time.Second),
 	)
 
 	if err != nil {
@@ -268,7 +268,7 @@ func (c *Auth) authorize(uid int) (*web.Authorize, error) {
 
 	return &web.Authorize{
 		AccessToken: token,
-		ExpiresIn:   int32(c.Config.Jwt.ExpiresTime),
+		ExpiresIn:   int32(a.Config.Jwt.ExpiresTime),
 		Type:        "Bearer",
 	}, nil
 }

@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gzydong/go-chat/internal/pkg/encrypt"
 	"github.com/redis/go-redis/v9"
-	"go-chat/internal/pkg/encrypt"
 )
 
 type JwtTokenStorage struct {
 	redis *redis.Client
 }
 
-func NewTokenSessionStorage(redis *redis.Client) *JwtTokenStorage {
+func NewJwtTokenStorage(redis *redis.Client) *JwtTokenStorage {
 	return &JwtTokenStorage{redis}
 }
 

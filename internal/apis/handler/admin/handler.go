@@ -1,8 +1,9 @@
 package admin
 
 import (
-	"go-chat/internal/apis/handler/admin/system"
-	"go-chat/internal/repository/repo"
+	"github.com/gzydong/go-chat/internal/apis/handler/admin/system"
+	"github.com/gzydong/go-chat/internal/apis/handler/admin/user"
+	"github.com/gzydong/go-chat/internal/repository/repo"
 )
 
 type Handler struct {
@@ -13,4 +14,5 @@ type Handler struct {
 	Resource  *system.Resource
 	Menu      *system.Menu
 	AdminRepo *repo.Admin
+	User      *user.User
 }

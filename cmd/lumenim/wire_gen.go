@@ -8,36 +8,37 @@ package main
 
 import (
 	"github.com/google/wire"
-	"go-chat/config"
-	"go-chat/internal/apis"
-	"go-chat/internal/apis/handler"
-	"go-chat/internal/apis/handler/admin"
-	"go-chat/internal/apis/handler/admin/system"
-	"go-chat/internal/apis/handler/open"
-	v1_2 "go-chat/internal/apis/handler/open/v1"
-	"go-chat/internal/apis/handler/web"
-	"go-chat/internal/apis/handler/web/v1"
-	"go-chat/internal/apis/handler/web/v1/article"
-	"go-chat/internal/apis/handler/web/v1/contact"
-	"go-chat/internal/apis/handler/web/v1/group"
-	"go-chat/internal/apis/handler/web/v1/talk"
-	"go-chat/internal/apis/router"
-	"go-chat/internal/comet"
-	"go-chat/internal/comet/consume"
-	"go-chat/internal/logic"
-	"go-chat/internal/mission"
-	"go-chat/internal/mission/cron"
-	"go-chat/internal/mission/queue"
-	"go-chat/internal/mission/temp"
-	"go-chat/internal/provider"
-	"go-chat/internal/repository/cache"
-	"go-chat/internal/repository/repo"
-	"go-chat/internal/service"
-	"go-chat/internal/service/message"
+	"github.com/gzydong/go-chat/config"
+	"github.com/gzydong/go-chat/internal/apis"
+	"github.com/gzydong/go-chat/internal/apis/handler"
+	"github.com/gzydong/go-chat/internal/apis/handler/admin"
+	"github.com/gzydong/go-chat/internal/apis/handler/admin/system"
+	"github.com/gzydong/go-chat/internal/apis/handler/admin/user"
+	"github.com/gzydong/go-chat/internal/apis/handler/open"
+	v1_2 "github.com/gzydong/go-chat/internal/apis/handler/open/v1"
+	"github.com/gzydong/go-chat/internal/apis/handler/web"
+	"github.com/gzydong/go-chat/internal/apis/handler/web/v1"
+	"github.com/gzydong/go-chat/internal/apis/handler/web/v1/article"
+	"github.com/gzydong/go-chat/internal/apis/handler/web/v1/contact"
+	"github.com/gzydong/go-chat/internal/apis/handler/web/v1/group"
+	"github.com/gzydong/go-chat/internal/apis/handler/web/v1/talk"
+	"github.com/gzydong/go-chat/internal/apis/router"
+	"github.com/gzydong/go-chat/internal/comet"
+	"github.com/gzydong/go-chat/internal/comet/consume"
+	"github.com/gzydong/go-chat/internal/logic"
+	"github.com/gzydong/go-chat/internal/mission"
+	"github.com/gzydong/go-chat/internal/mission/cron"
+	"github.com/gzydong/go-chat/internal/mission/queue"
+	"github.com/gzydong/go-chat/internal/mission/temp"
+	"github.com/gzydong/go-chat/internal/provider"
+	"github.com/gzydong/go-chat/internal/repository/cache"
+	"github.com/gzydong/go-chat/internal/repository/repo"
+	"github.com/gzydong/go-chat/internal/service"
+	"github.com/gzydong/go-chat/internal/service/message"
 )
 
 import (
-	_ "go-chat/internal/pkg/server"
+	_ "github.com/gzydong/go-chat/internal/pkg/server"
 )
 
 // Injectors from wire.go:
@@ -61,7 +62,7 @@ func NewHttpInjector(c *config.Config) *apis.Provider {
 		SmsService:  smsService,
 		UserService: userService,
 	}
-	jwtTokenStorage := cache.NewTokenSessionStorage(client)
+	jwtTokenStorage := cache.NewJwtTokenStorage(client)
 	redisLock := cache.NewRedisLock(client)
 	robot := repo.NewRobot(db)
 	source := repo.NewSource(db, client)
@@ -99,7 +100,7 @@ func NewHttpInjector(c *config.Config) *apis.Provider {
 		AesUtil:             iAesUtil,
 	}
 	organize := repo.NewOrganize(db)
-	user := &v1.User{
+	v1User := &v1.User{
 		Redis:        client,
 		UsersRepo:    users,
 		OrganizeRepo: organize,
@@ -368,7 +369,7 @@ func NewHttpInjector(c *config.Config) *apis.Provider {
 	webV1 := &web.V1{
 		Common:       common,
 		Auth:         auth,
-		User:         user,
+		User:         v1User,
 		Organize:     v1Organize,
 		Talk:         session,
 		TalkMessage:  talkMessage,
@@ -392,11 +393,13 @@ func NewHttpInjector(c *config.Config) *apis.Provider {
 		UserRepo: users,
 	}
 	repoAdmin := repo.NewAdmin(db)
+	sysMenu := repo.NewSysMenu(db)
 	captchaStorage := cache.NewCaptchaStorage(client)
 	captcha := provider.NewBase64Captcha(captchaStorage)
 	adminAuth := &admin.Auth{
 		Config:          c,
 		AdminRepo:       repoAdmin,
+		SysMenuRepo:     sysMenu,
 		JwtTokenStorage: jwtTokenStorage,
 		ICaptcha:        captcha,
 		Rsa:             iRsa,
@@ -418,9 +421,11 @@ func NewHttpInjector(c *config.Config) *apis.Provider {
 	resource := &system.Resource{
 		SysResourceRepo: sysResource,
 	}
-	sysMenu := repo.NewSysMenu(db)
 	menu := &system.Menu{
 		SysMenuRepo: sysMenu,
+	}
+	userUser := &user.User{
+		UserRepo: users,
 	}
 	adminHandler := &admin.Handler{
 		Auth:      adminAuth,
@@ -430,6 +435,7 @@ func NewHttpInjector(c *config.Config) *apis.Provider {
 		Resource:  resource,
 		Menu:      menu,
 		AdminRepo: repoAdmin,
+		User:      userUser,
 	}
 	index := v1_2.NewIndex()
 	openV1 := &open.V1{

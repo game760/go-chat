@@ -27,7 +27,7 @@ run:
 
 .PHONY: build
 build:
-	go build -o ./bin/lumenim ./cmd/lumenim
+	CGO_ENABLED=0 go build -ldflags="-s -w" -o ./bin/lumenim ./cmd/lumenim
 
 .PHONY: protoc-gen-bff
 protoc-gen-bff:

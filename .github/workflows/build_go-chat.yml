@@ -1,0 +1,60 @@
+name: build_go-chat
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: 0 18 * * *
+
+jobs:
+  build:
+    runs-on: windows-2025
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: true
+
+      - name: Install dependencies
+        run: |
+          go mod tidy
+          make install
+
+      - name: Build go-chat
+        run: |
+          make build 
+
+      - name: Package bin folder
+        run: |
+          cp config.example.yaml ./bin/config.yaml
+          $archiveName = "go-chat.zip"
+          Compress-Archive -Path ./bin/* -DestinationPath $archiveName -Force
+        shell: pwsh
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: false
+          prerelease: false
+          name: go-chat
+          tag_name: go-chat
+          body: |
+              - 所需环境：
+                 - Golang 1.25+
+                 - mysql 8.4+
+                 - Redis 7.0+
+                 - Minio(可选)
+              - 使用方法：
+                 设置好config.yaml相关参数，编译完成后，分别运行下面的命令：
+                 - ./bin/lumenim http      # 本地启动 http 服务
+                 - ./bin/lumenim comet     # 本地启动 websocket 服务
+                 - ./bin/lumenim queue     # 启动异步队列
+                 - ./bin/lumenim crontab     # 启动定时任务
+                 - ./bin/lumenim temp test   # 自定义脚本
+          files: |
+            go-chat.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.BUILD_CHAT }}
